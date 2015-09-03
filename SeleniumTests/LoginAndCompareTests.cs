@@ -58,7 +58,7 @@ namespace SeleniumTests
                 Thread.Sleep(2000);
             }
 
-            return new GearsetComparisonResults(m_Browser);
+            return this;
         }
     }
 
