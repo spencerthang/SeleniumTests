@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.ObjectModel;
+using System.Threading;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -36,6 +38,30 @@ namespace SeleniumTests
         }
     }
 
+    public class GearsetComparisonResults
+    {
+        private readonly IWebDriver m_Browser;
+
+        public GearsetComparisonResults(IWebDriver browser)
+        {
+            m_Browser = browser;
+        }
+
+        public GearsetComparisonResults LoadResults(int expectedDifferences)
+        {
+            // Wait till at least 2 elements have loaded
+            var checkboxes = m_Browser.FindElements(By.ClassName("ko-grid-selection-element"), 300, expectedDifferences);
+
+            foreach (var checkbox in checkboxes)
+            {
+                checkbox.Click();
+                Thread.Sleep(2000);
+            }
+
+            return new GearsetComparisonResults(m_Browser);
+        }
+    }
+
     public class GearsetConfigure
     {
         private readonly IWebDriver m_Browser;
@@ -45,9 +71,10 @@ namespace SeleniumTests
             m_Browser = browser;
         }
 
-        public void Compare(string source, string target)
+        public GearsetComparisonResults Compare(string source, string target)
         {
-            var orgUsernames = m_Browser.FindElements(By.Id("configure-auth-username"), 30, 4);
+            // Wait till all 4 elements have loaded via JS injection
+            m_Browser.FindElements(By.Id("configure-auth-username"), 30, 4);
 
             // Fill via Javascript - Selenium has problems with Javascript-inserted DOM element visibility
             var js = m_Browser as IJavaScriptExecutor;
@@ -57,6 +84,8 @@ namespace SeleniumTests
 
             var compareButton = m_Browser.FindElement(By.CssSelector("#compareico:enabled"), 10);
             compareButton.Click();
+
+            return new GearsetComparisonResults(m_Browser);
         }
     }
 
@@ -116,6 +145,20 @@ namespace SeleniumTests
 
             var gearsetConfigure = new GearsetHosted(browser).Login(c_SalesforceUsername, c_SalesforcePassword);
             gearsetConfigure.Compare(c_SalesforceSource, c_SalesforceTarget);
+        }
+
+        [Test]
+        public void LoginCompareAndTestResults()
+        {
+            var browser = new ChromeDriver(new ChromeOptions
+            {
+                LeaveBrowserRunning = false
+            });
+
+
+            var gearsetConfigure = new GearsetHosted(browser).Login(c_SalesforceUsername, c_SalesforcePassword);
+            var gearsetCompareResults = gearsetConfigure.Compare(c_SalesforceSource, c_SalesforceTarget);
+            gearsetCompareResults.LoadResults(c_ExpectedDifferences);
         }
     }
 }
