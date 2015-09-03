@@ -62,7 +62,6 @@ namespace SeleniumTests
 
     public class GearsetHosted
     {
-        
         private readonly IWebDriver m_Browser;
 
         public GearsetHosted(IWebDriver browser)
@@ -92,14 +91,27 @@ namespace SeleniumTests
         private const string c_SalesforcePassword = "P@ssw0rd1";
         private const string c_SalesforceSource = "spencerthang@gmail.com";
         private const string c_SalesforceTarget = "spencer.thang@red-gate.com";
+        private const int c_ExpectedDifferences = 10;
 
         [Test]
-        public void LoginAndCompare()
+        public void Login()
         {
             var browser = new ChromeDriver(new ChromeOptions
                                            {
                                                LeaveBrowserRunning = false
                                            });
+
+
+            new GearsetHosted(browser).Login(c_SalesforceUsername, c_SalesforcePassword);
+        }
+
+        [Test]
+        public void LoginAndCompare()
+        {
+            var browser = new ChromeDriver(new ChromeOptions
+            {
+                LeaveBrowserRunning = false
+            });
 
 
             var gearsetConfigure = new GearsetHosted(browser).Login(c_SalesforceUsername, c_SalesforcePassword);
