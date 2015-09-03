@@ -44,26 +44,41 @@ namespace SeleniumTests
         {
             m_Browser = browser;
         }
+
+        public void Compare(string source, string target)
+        {
+            var orgUsernames = m_Browser.FindElements(By.Id("configure-auth-username"), 30, 4);
+
+            // Fill via Javascript - Selenium has problems with Javascript-inserted DOM element visibility
+            var js = m_Browser as IJavaScriptExecutor;
+            js.ExecuteScript("$('.configure-oauth-widget #configure-auth-username').val('" + target + "');");
+            js.ExecuteScript("$('.configure-oauth-widget #configure-auth-username:first').val('" + source + "');");
+            js.ExecuteScript("$('.configure-oauth-widget #configure-auth-username').change();");
+
+            var compareButton = m_Browser.FindElement(By.CssSelector("#compareico:enabled"), 10);
+            compareButton.Click();
+        }
     }
 
     public class GearsetHosted
     {
+        
         private readonly IWebDriver m_Browser;
 
         public GearsetHosted(IWebDriver browser)
         {
             m_Browser = browser;
 
-            browser.Navigate().GoToUrl("https://app.gearset.com");
+            browser.Navigate().GoToUrl("http://localhost:1234");
         }
 
-        public GearsetConfigure Login()
+        public GearsetConfigure Login(string username, string password)
         {
             var loginForm = m_Browser.FindElement(By.Id("splashscreen-container-login-via-salesforce"), 30);
             loginForm.FindElement(By.Id("get-started")).Click();
 
-            m_Browser.FindElement(By.Id("username"), 10).SendKeys("spencerthang@gmail.com");
-            m_Browser.FindElement(By.Id("password"), 10).SendKeys("P@ssw0rd1");
+            m_Browser.FindElement(By.Id("username"), 10).SendKeys(username);
+            m_Browser.FindElement(By.Id("password"), 10).SendKeys(password);
 
             m_Browser.FindElement(By.Id("Login"), 10).Click();
 
@@ -73,8 +88,13 @@ namespace SeleniumTests
 
     public class LoginAndCompareTests
     {
+        private const string c_SalesforceUsername = "spencerthang@gmail.com";
+        private const string c_SalesforcePassword = "P@ssw0rd1";
+        private const string c_SalesforceSource = "spencerthang@gmail.com";
+        private const string c_SalesforceTarget = "spencer.thang@red-gate.com";
+
         [Test]
-        public void Foo()
+        public void LoginAndCompare()
         {
             var browser = new ChromeDriver(new ChromeOptions
                                            {
@@ -82,7 +102,8 @@ namespace SeleniumTests
                                            });
 
 
-            var gearsetConfigure = new GearsetHosted(browser).Login();
+            var gearsetConfigure = new GearsetHosted(browser).Login(c_SalesforceUsername, c_SalesforcePassword);
+            gearsetConfigure.Compare(c_SalesforceSource, c_SalesforceTarget);
         }
     }
 }
