@@ -19,12 +19,18 @@ namespace SeleniumTests
             return driver.FindElement(by);
         }
 
-        public static ReadOnlyCollection<IWebElement> FindElements(this IWebDriver driver, By by, int timeoutInSeconds)
+        public static ReadOnlyCollection<IWebElement> FindElements(this IWebDriver driver, By by, int timeoutInSeconds, int count = 0)
         {
             if (timeoutInSeconds > 0)
             {
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-                return wait.Until(drv => drv.FindElements(by));
+                var maxTime = DateTime.Now + TimeSpan.FromSeconds(timeoutInSeconds);
+                while (DateTime.Now < maxTime)
+                {
+                    var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
+                    var ret = wait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(by));
+                    if(ret.Count >= count)
+                        return ret;
+                }
             }
             return driver.FindElements(by);
         }
